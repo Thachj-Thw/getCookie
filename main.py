@@ -40,7 +40,8 @@ class MainFrame(tk.Frame):
 
     def run_start(self):
         try:
-            if self.start.warning():
+            ok = self.start.ask_continue()
+            if ok:
                 kill_chrome()
                 self.driver.start()
         finally:

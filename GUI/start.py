@@ -15,7 +15,7 @@ class Start(tk.Frame):
         self.pack(fill=tk.X)
 
     @staticmethod
-    def warning():
+    def ask_continue():
         if "chrome.exe" in (proc.name() for proc in psutil.process_iter()):
             if not messagebox.askokcancel(message="This action will end the current chrome process"):
                 return False
