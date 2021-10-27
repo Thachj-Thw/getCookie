@@ -107,8 +107,12 @@ class Driver:
         self.driver = None
 
     def start(self) -> None:
-        path = os.path.join(
-            "C:", os.sep, "Users", getpass.getuser(), "AppData", "Local", "Google", "Chrome", "User Data")
+        try:
+            chromedriver_autoinstaller.install(cwd=True)
+        except URLError:
+            pass
+        path = os.path.join("C:", os.sep, "Users", getpass.getuser(), "AppData", "Local", "Google", "Chrome",
+                            "User Data")
         options = webdriver.ChromeOptions()
         options.add_argument("--incognito")
         options.add_argument("--user-data-dir=" + path)
@@ -146,13 +150,6 @@ class Driver:
             if "disconnected" not in self.driver.get_log("driver")[-1]["message"]:
                 return True
         return False
-
-
-def install_driver():
-    try:
-        chromedriver_autoinstaller.install(cwd=True)
-    except URLError:
-        pass
 
 
 def kill_chrome() -> None:

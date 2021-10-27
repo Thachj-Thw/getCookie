@@ -84,5 +84,4 @@ class Main(tk.Tk):
 
 
 if __name__ == '__main__':
-    install_driver()
     Main().mainloop()
