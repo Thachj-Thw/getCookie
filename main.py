@@ -8,6 +8,7 @@ from GUI.start import Start
 from GUI.line import Line
 from GUI.getCookie import GetCookie
 from GUI.printCookie import PrintCookie
+from GUI.version import ShowVersion
 import time
 
 
@@ -17,7 +18,7 @@ class MainFrame(tk.Frame):
         super().__init__(master, bg=master["bg"], **kwargs)
         self.master = master
         self.master.protocol("WM_DELETE_WINDOW", self.on_close)
-        self.driver = None
+        self.driver = Driver()
         img = (
             ImageTk.PhotoImage(Image.open(os.path.join(path(), "images", "copy.png")).resize((16, 16))),
             ImageTk.PhotoImage(Image.open(os.path.join(path(), "images", "tick.png")).resize((16, 16)))
@@ -26,17 +27,12 @@ class MainFrame(tk.Frame):
         Line(self)
         self.get = GetCookie(self)
         self.show = PrintCookie(self, img)
+        ShowVersion(self)
 
         self.start.button["command"] = self.on_start
         self.get.button["command"] = self.on_get
 
         self.pack()
-
-    def driver_is_open(self):
-        if self.driver:
-            if "disconnected" not in self.driver.get_log("driver")[-1]["message"]:
-                return True
-        return False
 
     def on_start(self):
         self.start.button.disable()
@@ -46,30 +42,28 @@ class MainFrame(tk.Frame):
         try:
             if self.start.warning():
                 kill_chrome()
-                self.driver = init_driver()
-                self.driver.get("https://www.facebook.com")
+                self.driver.start()
         finally:
             self.start.button.enable()
 
     def on_get(self):
-        threading.Thread(target=self.run_get).start()
+        if self.driver.logged():
+            threading.Thread(target=self.run_get).start()
+        else:
+            messagebox.showwarning(title="Warning", message="You need login facebook")
 
     def run_get(self):
-        if self.driver_is_open():
-            cookie = create_cookies(self.driver)
-            self.show.label.set_text(cookie)
-            time.sleep(1)
-            self.driver.quit()
+        cookie = self.driver.create_cookies()
+        self.show.label.set_text(cookie)
+        time.sleep(1)
+        self.driver.end()
 
     def on_close(self):
         if self.start.button.is_disable():
             messagebox.showwarning(title="Warning", message="Program is running, can't close")
         else:
             self.master.destroy()
-            if self.driver_is_open():
-                self.driver.quit()
-            else:
-                kill_driver()
+            self.driver.end()
 
 
 class Main(tk.Tk):
