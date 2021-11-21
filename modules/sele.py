@@ -1,3 +1,4 @@
+from typing import Optional
 from selenium import webdriver
 from selenium.webdriver.remote.webdriver import WebDriver as RemoteWebDriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -22,7 +23,7 @@ import warnings
 
 class ServiceHideConsole(Service):
 
-    def start(self):
+    def start(self) -> None:
         try:
             cmd = [self.path]
             cmd.extend(self.command_line_args())
@@ -66,7 +67,7 @@ class ChromeHideConsole(RemoteWebDriver):
     def __init__(self, executable_path="chromedriver", port=0,
                  options=None, service_args=None,
                  desired_capabilities=None, service_log_path=None,
-                 chrome_options=None, keep_alive=True):
+                 chrome_options=None, keep_alive=True) -> None:
         if chrome_options:
             warnings.warn('use options instead of chrome_options',
                           DeprecationWarning, stacklevel=2)
@@ -123,27 +124,30 @@ class Driver:
         self.driver.get("https://www.facebook.com")
 
     def end(self) -> None:
-        if self.is_open():
-            self.driver.quit()
-        else:
-            kill_driver()
+        if self.driver:
+            if self.is_open():
+                self.driver.quit()
+            else:
+                kill_driver()
         self.driver = None
 
-    def logged(self) -> bool:
-        locator = (By.CSS_SELECTOR, 'svg[class="a8c37x1j ms05siws hwsy1cff b7h9ocf4"]')
-        try:
-            WebDriverWait(self.driver, 1).until(ec.presence_of_element_located(locator))
-        except (TimeoutException, AttributeError):
-            return False
-        return True
+    def logged(self) -> Optional[bool]:
+        if self.driver:
+            locator = (By.CSS_SELECTOR, 'svg[class="a8c37x1j ms05siws hwsy1cff b7h9ocf4"]')
+            try:
+                WebDriverWait(self.driver, 1).until(ec.presence_of_element_located(locator))
+            except (TimeoutException, AttributeError):
+                return False
+            return True
 
-    def create_cookies(self) -> str:
-        cookies = self.driver.get_cookies()[::-1]
-        str_cookie = ""
-        for cookie in cookies[:-1]:
-            str_cookie += cookie["name"] + "=" + cookie["value"] + "; "
-        str_cookie += cookies[-1]["name"] + "=" + cookies[-1]["value"]
-        return str_cookie
+    def create_cookies(self) -> Optional[str]:
+        if self.driver:
+            cookies = self.driver.get_cookies()[::-1]
+            str_cookie = ""
+            for cookie in cookies[:-1]:
+                str_cookie += cookie["name"] + "=" + cookie["value"] + "; "
+            str_cookie += cookies[-1]["name"] + "=" + cookies[-1]["value"]
+            return str_cookie
 
     def is_open(self) -> bool:
         if self.driver:
